@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-
 import 'view_model.dart';
+import 'scoreboard.dart';
 
 class QuestionScreen extends StatefulWidget {
   const QuestionScreen({super.key});
@@ -85,15 +85,42 @@ class QuestionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      child: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Text(
-          question ?? '',
-          style: Theme.of(context).textTheme.displaySmall,
+    return AnimatedSwitcher(
+      layoutBuilder: (currentChild, previousChildren) {
+        return Stack(
+          alignment: Alignment.topCenter,
+          children: <Widget>[
+              ...previousChildren,
+              if (currentChild != null) currentChild,
+          ],
+        );
+      },
+      transitionBuilder: (child, animation) {
+        final curveAnimation = CurveTween(
+          curve: Curves.easeInCubic,
+        ).animate(animation);
+        final offsetAnimation = Tween<Offset>(
+          begin: Offset(-0.1, 0.0),
+          end: Offset.zero
+        ).animate(curveAnimation);
+        final fadeInAnimation = curveAnimation;
+        return FadeTransition(
+          opacity: fadeInAnimation,
+          child: SlideTransition(position: offsetAnimation, child: child),
+        );
+      },
+      duration: const Duration(milliseconds: 300),
+      child: Card(
+        key: ValueKey(question),
+        elevation: 4,
+        child: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Text(
+            question ?? '',
+            style: Theme.of(context).textTheme.displaySmall,
+          ),
         ),
-      ),
+      )
     );
   }
 }
@@ -160,13 +187,9 @@ class StatusBar extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            Text(
-              'Question ${viewModel.answeredQuestionCount} / ${viewModel.totalQuestions}',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            Text(
-              'Score: ${viewModel.score}',
-              style: Theme.of(context).textTheme.titleLarge,
+            Scoreboard(                                        // NEW
+              score: viewModel.score,                          // NEW
+              totalQuestions: viewModel.totalQuestions,        // NEW
             ),
           ],
         ),
